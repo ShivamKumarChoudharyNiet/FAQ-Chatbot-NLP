@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Chatbot Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 to-indigo-950 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[600px]">
+        <div class="bg-indigo-600 p-4 flex items-center justify-between shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-100 text-indigo-600 p-2.5 rounded-full font-bold">
+                    <i class="fa-solid fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-lg">Campus Support Bot</h2>
+                    <span class="text-indigo-200 text-xs flex items-center gap-1">
+                        <span class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> Online | FAQ Engine
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div id="chatBox" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50">
+            <div class="flex items-start gap-2.5">
+                <div class="bg-indigo-600 text-white p-2 rounded-full text-xs mt-1"><i class="fa-solid fa-robot"></i></div>
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 max-w-[80%]">
+                    <p class="text-gray-800 text-sm font-medium">Hello! 👋 Ask me anything about college admissions, fees, courses, or placements.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 border-t border-gray-100 bg-white flex items-center gap-2">
+            <input type="text" id="userInput" placeholder="Ask a question..." class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-all text-gray-800">
+            <button id="sendBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3.5 rounded-xl shadow-md transition transform active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chatBox");
+        const userInput = document.getElementById("userInput");
+        const sendBtn = document.getElementById("sendBtn");
+
+        function appendMessage(sender, text) {
+            const msgDiv = document.createElement("div");
+            msgDiv.className = sender === 'user' ? "flex items-start gap-2.5 justify-end" : "flex items-start gap-2.5";
+            
+            const innerHTML = sender === 'user' 
+                ? `<div class="bg-indigo-600 text-white p-3.5 rounded-2xl shadow-sm max-w-[80%]"><p class="text-sm font-medium">${text}</p></div>`
+                : `<div class="bg-indigo-600 text-white p-2 rounded-full text-xs mt-1"><i class="fa-solid fa-robot"></i></div>
+                   <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 max-w-[80%]"><p class="text-gray-800 text-sm font-medium">${text}</p></div>`;
+            
+            msgDiv.innerHTML = innerHTML;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            userInput.value = "";
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                appendMessage('bot', data.reply);
+            } catch (error) {
+                console.error("Error:", error);
+                appendMessage('bot', "Server connecting issue. Please make sure flask server is running.");
+            }
+        }
+
+        sendBtn.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+</html>
